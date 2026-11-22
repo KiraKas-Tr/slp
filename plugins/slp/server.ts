@@ -78,6 +78,14 @@ function callerPath(path: string, ctx: PluginCliContext): string {
   return path;
 }
 
+function samePath(a: string, b: string): boolean {
+  const norm = (p: string) => {
+    const r = resolve(p).replace(/[\\/]+$/, "");
+    return process.platform === "win32" ? r.toLowerCase() : r;
+  };
+  return norm(a) === norm(b);
+}
+
 async function readText(path: string, ctx: PluginCliContext): Promise<string> {
   const full = callerPath(path, ctx);
   let text: string;
@@ -127,11 +135,18 @@ export default async function plugin(bb: BbPluginApi) {
     }
     // New workspaces run on the caller's machine.
     const { hostId } = await bb.sdk.environments.get({ environmentId: caller.environmentId });
-    const workspace =
-      project !== undefined
-        ? { type: "managed-worktree" as const, baseBranch: { kind: "default" as const } }
-        : { type: "unmanaged" as const, path: callerPath(env!, ctx) };
-    return { projectId: project ?? caller.projectId, environment: { type: "host" as const, hostId, workspace } };
+    if (project !== undefined) {
+      const workspace = { type: "managed-worktree" as const, baseBranch: { kind: "default" as const } };
+      return { projectId: project, environment: { type: "host" as const, hostId, workspace } };
+    }
+    const path = callerPath(env!, ctx);
+    // File the child under the project that owns this directory, e.g. a Lead for Clipper-Studio
+    // spawned from home belongs to Clipper-Studio; other directories stay in the caller's project.
+    const owner = (await bb.sdk.projects.list()).find((p) =>
+      p.sources.some((s) => s.hostId === hostId && samePath(s.path, path)),
+    );
+    const workspace = { type: "unmanaged" as const, path };
+    return { projectId: owner?.id ?? caller.projectId, environment: { type: "host" as const, hostId, workspace } };
   }
 
   async function spawn(role: "Lead" | "Peer", flags: Flags, ctx: PluginCliContext) {
