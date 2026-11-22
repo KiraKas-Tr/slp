@@ -6,6 +6,7 @@ Skills live in `.agents/skills/<name>/SKILL.md`. When a skill is named, read its
 
 - `better-slp`: observe how SLP performed on real tasks from outside and propose the smallest improvement, preferring removal.
 - `to-tickets`: break a plan into actionable tickets.
+- `tdd`: build features or fix bugs by writing a failing test first.
 
 ## Orchestration (Supervisor-Lead-Peer)
 

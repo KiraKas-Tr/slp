@@ -25,7 +25,7 @@ Spawn and message SLP threads only with `bb slp` (the `slp` plugin; install once
 
 For each task, create `PLAN.md` in the target repo using [the plan template](templates/PLAN.md). Confirm goal, observable outcome and key decisions with Kira before handing the plan to one Lead.
 
-Use [the brief template](templates/brief.md). Start with `Role: Lead`, then `Name: <name>`. Include the absolute path to the Lead instructions in the home repo, the absolute path to [the ledger](ledger.md), target repo, original plan and tracker. The Lead does not know about the Supervisor: write the brief as its requester, in your own words. Carry every goal, decision and constraint we settled faithfully, but do not paste my messages verbatim or quote or attribute them ("Kira said").
+Use [the brief template](templates/brief.md). Start with `Role: Lead`, then `Name: <name>`. Include the absolute path to the Lead instructions in the home repo, the absolute path to the home repo's `.agents/skills/to-tickets/SKILL.md` under `Skills:`, the absolute path to [the ledger](ledger.md), target repo, original plan and tracker. The Lead does not know about the Supervisor: write the brief as its requester, in your own words. Carry every goal, decision and constraint we settled faithfully, but do not paste my messages verbatim or quote or attribute them ("Kira said").
 
 - Spawn one Lead per task in the target repo: `bb slp lead --model <model id> --brief <brief file> --env <target directory>`. BB wakes you after every Lead turn with its reply; the Lead asks, escalates and reports in those replies, and your `bb slp tell` messages reach it as its requester's. The Lead thread ends when the task ends.
 

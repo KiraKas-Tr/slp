@@ -4,7 +4,7 @@ Multi-agent orchestration on BB: a Supervisor oversees Leads, each Lead coordina
 
 - `orchestration/`: the method. `SLP.md` (workflow), `roles/` (one instruction file per role), `templates/` (PLAN, brief), `ledger.md` (append-only log; rules only, no entries).
 - `plugins/slp/`: the `bb slp lead|peer|tell` plugin. It only spawns and messages threads with the right flags and checks who spawns whom.
-- `.agents/skills/`: `better-slp` (improve SLP from real runs) and `to-tickets` (used by Leads).
+- `.agents/skills/`: `better-slp` (improve SLP from real runs), `to-tickets` (Leads) and `tdd` (Peers that write code).
 - `AGENTS.md`: routes a thread to its role file by the brief's first line.
 
 ## Setup

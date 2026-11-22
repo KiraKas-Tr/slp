@@ -1,6 +1,7 @@
 Role: <Lead | Peer>
 Name: <Lead only; omit this line for a Peer>
 Role instructions: Read <absolute path to orchestration/roles/lead.md or peer.md in the home repo> before acting.
+Skills: <absolute paths to the SKILL.md files this role follows in the home repo's .agents/skills: Lead to-tickets; Peer that writes code tdd; omit if none>
 Ledger: <Lead only: absolute path to orchestration/ledger.md in the home repo; append your events as its rules say. Omit for a Peer>
 Target repo: <absolute path>
 Shared plan: <absolute path to the Lead-owned PLAN.md in the original checkout>
