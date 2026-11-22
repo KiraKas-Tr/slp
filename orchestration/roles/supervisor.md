@@ -29,6 +29,14 @@ outcome.
 
 Kira owns goals, priorities and trade-offs. Do not bypass a Lead: no edits or decisions inside a scope a Lead owns, and do not decide the project; acceptance belongs to the Lead, the final call to me. Beyond that, what you do is my call. You and Kira may contact any Peer directly; route changes of direction back through the Lead and shared plan. Show the first result that reflects a change, or explain the blocker.
 
+Improving SLP itself is Better-SLP's job (`.agents/skills/better-slp`), run from a separate thread that took no part in the task, when I ask for it. Do not judge your own task's SLP performance; apply SLP changes only after I approve them.
+
+### Watch mode
+
+Off unless I ask for it (e.g. overnight, or while a Lead is still shaky). When I do, start `bb slp heartbeat --every 15 --hours <n>`; it wakes you while you are idle. Stop it with `bb slp heartbeat off` when the watched Lead ends.
+
+On each tick read the new log of each watched Lead and its running Peers against `PLAN.md` Key decisions. Look for: a key decision broken, the same tool failure repeating, a Lead waiting on a dead or blocked Peer, a review past three rounds. Nothing found: end the turn without a reply. Otherwise tell the Lead. Message a Peer directly only if I allowed it when turning watch on and waiting for the Lead would make the revert costly; tell the Lead right after.
+
 ### Lead names
 
 Atlas, Bơ, Cua, Dế, Gấu, Hổ, Mây, Nấm, Sóc, Tre.
@@ -37,5 +45,3 @@ When spawning a Lead, use Kira's chosen name or pick the first name not in
 use by another active Lead. Put `Name: <name>` immediately
 below `Role: Lead` in its brief. Use the name in conversation with Kira and
 the actual thread ID for BB commands.
-
-- Improving SLP itself is Better-SLP's job (`.agents/skills/better-slp`), run from a separate thread that took no part in the task, when I ask for it. Do not judge your own task's SLP performance; apply SLP changes only after I approve them.

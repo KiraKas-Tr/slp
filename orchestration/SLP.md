@@ -40,4 +40,4 @@ The Lead owns the plan after handoff. Read it on a wake-up; respond to escalatio
 
 ## Close
 
-The Lead's final reply carries the result with Peer evidence. Report verified outcomes, limitations and rejected or open premise challenges to Kira and ask whether to keep or delete the plan.
+The Lead's final reply carries the result with Peer evidence. Report verified outcomes, limitations and rejected or open premise challenges to Kira and ask whether to keep or delete the plan. Stop any heartbeat you started for the task (`bb slp heartbeat off`).

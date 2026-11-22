@@ -13,27 +13,50 @@ const PEER_MODELS: Record<string, { providerId: string; model: string }> = {
   "devin/swe-2-flash-medium": { providerId: "devin", model: "swe-2-flash-medium" },
 };
 
+const HEARTBEAT_DEFAULT_HOURS = 8;
+const HEARTBEAT_KEY = "heartbeat:";
+type Heartbeat = { everyMinutes: number; nextAt: number; until: number };
+
+// orchestration/roles/lead.md "Heartbeat" and supervisor.md "Watch mode".
+const HEARTBEAT_PROMPT: Record<"Lead" | "Supervisor", string> = {
+  Lead: "[SLP heartbeat] Read the latest output and issue of every running Peer and redirect any drift now. If all is on track, end this turn without a reply. Run `bb slp heartbeat off` when no Peer is running.",
+  Supervisor:
+    "[SLP heartbeat] Watch tick: follow the watch mode steps in your Supervisor instructions. If nothing is found, end this turn without a reply.",
+};
+
 const USAGE = `Usage:
   bb slp lead --model <id> --brief <file> [--env <env-id|dir>]
   bb slp peer --model <id> --brief <file> --title <title> [--env <env-id|dir> | --worktree --project <id>]
   bb slp tell <thread-id> (--file <path> | <message...>) [--steer]
+  bb slp heartbeat (--every <minutes> [--hours <n>] | off)
 
 The brief must start with "Role: Lead" + "Name: <name>", or "Role: Peer".
 Leads run on pi, Peers on their model's provider, as children of the calling thread; they wake you
 after every turn. Without --env the child uses your
 environment. tell queues behind an active turn; --steer joins it instead.
-Only a Lead spawns Peers; Leads and Peers do not spawn Leads.`;
+Only a Lead spawns Peers; Leads and Peers do not spawn Leads.
+heartbeat wakes the calling Supervisor or Lead every <minutes> while it is idle, for
+<n> hours (default ${HEARTBEAT_DEFAULT_HOURS}) or until off or the thread is archived.`;
 
 class UsageError extends Error {}
 
-type Command = "lead" | "peer" | "tell";
+type Command = "lead" | "peer" | "tell" | "heartbeat";
 type Flags = { positional: string[]; values: Map<string, string>; switches: Set<string> };
 
 const ALLOWED: Record<Command, { values: string[]; switches: string[] }> = {
   lead: { values: ["model", "brief", "env"], switches: ["help"] },
   peer: { values: ["model", "brief", "title", "env", "project"], switches: ["worktree", "help"] },
   tell: { values: ["file"], switches: ["steer", "help"] },
+  heartbeat: { values: ["every", "hours"], switches: ["help"] },
 };
+
+function positiveNumber(flags: Flags, name: string, fallback?: number): number {
+  const raw = flags.values.get(name);
+  if (raw === undefined && fallback !== undefined) return fallback;
+  const value = Number(raw);
+  if (raw === undefined || !Number.isFinite(value) || value <= 0) throw new UsageError(`--${name} needs a positive number.`);
+  return value;
+}
 
 function parseArgs(command: Command, argv: string[]): Flags {
   const allowed = ALLOWED[command];
@@ -206,6 +229,46 @@ export default async function plugin(bb: BbPluginApi) {
     return `Message ${result.delivery} to ${threadId}.`;
   }
 
+  async function heartbeat(flags: Flags, ctx: PluginCliContext) {
+    const threadId = callerThread(ctx);
+    const key = HEARTBEAT_KEY + threadId;
+    const [word, ...extra] = flags.positional;
+    if (word === "off" && extra.length === 0 && flags.values.size === 0) {
+      await bb.storage.kv.delete(key);
+      return "Heartbeat off.";
+    }
+    if (word !== undefined) throw new UsageError(`Unexpected argument: ${word}`);
+    const { role } = await bb.sdk.threads.getPluginMetadata({ threadId });
+    if (role === "Peer") throw new UsageError("Peers do not run a heartbeat.");
+    const everyMinutes = Math.round(positiveNumber(flags, "every"));
+    if (everyMinutes < 1) throw new UsageError("--every needs at least 1 minute.");
+    const hours = positiveNumber(flags, "hours", HEARTBEAT_DEFAULT_HOURS);
+    const now = Date.now();
+    const row: Heartbeat = { everyMinutes, nextAt: now + everyMinutes * 60_000, until: now + hours * 3_600_000 };
+    await bb.storage.kv.set(key, row);
+    return `Heartbeat every ${everyMinutes} min for ${hours} h. Stop it with: bb slp heartbeat off`;
+  }
+
+  // A tick only wakes an idle thread: a busy one is already awake, and queueing would stack ticks.
+  bb.background.schedule("slp-heartbeat", "* * * * *", async () => {
+    for (const key of await bb.storage.kv.list(HEARTBEAT_KEY)) {
+      const row = await bb.storage.kv.get<Heartbeat>(key);
+      const threadId = key.slice(HEARTBEAT_KEY.length);
+      const now = Date.now();
+      const thread = await bb.sdk.threads.get({ threadId }).catch(() => null);
+      if (!row || !thread || thread.archivedAt || thread.deletedAt || now >= row.until) {
+        await bb.storage.kv.delete(key);
+        continue;
+      }
+      if (now < row.nextAt) continue;
+      await bb.storage.kv.set(key, { ...row, nextAt: now + row.everyMinutes * 60_000 });
+      if (thread.status !== "idle") continue;
+      const { role } = await bb.sdk.threads.getPluginMetadata({ threadId });
+      const text = HEARTBEAT_PROMPT[role === "Lead" ? "Lead" : "Supervisor"];
+      await bb.sdk.threads.send({ threadId, input: [{ type: "text", text, mentions: [] }], mode: "queue-if-active" });
+    }
+  });
+
   bb.cli.register({
     name: "slp",
     summary: "Spawn SLP Leads/Peers and message them",
@@ -225,11 +288,16 @@ export default async function plugin(bb: BbPluginApi) {
         summary: "Message an SLP thread (Supervisor, Lead or Peer)",
         usage: "bb slp tell <thread-id> (--file <path> | <message...>) [--steer]",
       },
+      {
+        name: "heartbeat",
+        summary: "Wake yourself on a cadence while idle (Supervisor or Lead)",
+        usage: "bb slp heartbeat (--every <minutes> [--hours <n>] | off)",
+      },
     ],
     async run(argv, ctx) {
       const [command, ...rest] = argv;
       try {
-        if (command !== "lead" && command !== "peer" && command !== "tell") {
+        if (command !== "lead" && command !== "peer" && command !== "tell" && command !== "heartbeat") {
           if (command === undefined || command === "help" || command === "--help") return { exitCode: 0, stdout: USAGE };
           return { exitCode: 1, stderr: `Unknown command: ${command}\n\n${USAGE}` };
         }
@@ -238,7 +306,9 @@ export default async function plugin(bb: BbPluginApi) {
         const stdout =
           command === "tell"
             ? await tell(flags, ctx)
-            : await spawn(command === "lead" ? "Lead" : "Peer", flags, ctx);
+            : command === "heartbeat"
+              ? await heartbeat(flags, ctx)
+              : await spawn(command === "lead" ? "Lead" : "Peer", flags, ctx);
         return { exitCode: 0, stdout };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
