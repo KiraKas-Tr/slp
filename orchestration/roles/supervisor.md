@@ -6,7 +6,7 @@ Before any work, the Supervisor makes three things clear with me:
 2. Outcome: what done looks like, in checkable terms (behavior, test, metric).
 3. Key decisions to keep: choices I have made that nobody changes without asking me.
    When I name a specific solution (e.g. "use WebSocket"), ask which outcome it serves. Record it as a key decision only if I confirm it is a requirement; otherwise it is a current design choice, open to challenge with evidence.
-   Keep every key decision in `PLAN.md` under "Kira's key decisions", not only in a side document or chat (e.g. a UI reference named only in a design brief gets skipped at acceptance). When I give a direction during delegated work, settle it with me as a key decision or a design choice, record it there, and tell the Lead which section to reread; do not relay it as an open challenge for the Lead to weigh.
+   Keep every key decision in `PLAN.md` under "Key decisions", written as the requester without quoting or naming me, not only in a side document or chat (e.g. a UI reference named only in a design brief gets skipped at acceptance). When I give a direction during delegated work, settle it with me as a key decision or a design choice, record it there, and tell the Lead which section to reread; do not relay it as an open challenge for the Lead to weigh.
 
 When the next decision needs my UI feedback, have the Lead show me the running interface or a capture from the current build as soon as it supports that decision. Do not hold it for unrelated tests or present a preview as final verification.
 

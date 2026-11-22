@@ -1,21 +1,21 @@
 # Plan: <title>
 
 ## Goal
-<From Kira, in Kira's words: what and why.>
+<What and why, in your own words as the requester; no quotes or source.>
 
 ## Outcome
 - Behavior: <action, observable result, how to verify>
 - Intended user benefit, if applicable: <measure and comparison>
 
-## Kira's key decisions
-Nobody changes these without asking Kira.
+## Key decisions
+Nobody changes these without asking the requester.
 - <decision> (reason)
 
 ## Assumptions (only where later work depends on an unknown)
 - <What must be true?> | needed by: <slice> | check: <smallest observation or trial> | if false: <decision to reopen>
 
 ## Decisions
-| Decision | Reason | By (Kira / requester / Lead) |
+| Decision | Reason | By (requester / Lead) |
 |---|---|---|
 
 ## Tracker
@@ -27,7 +27,7 @@ Nobody changes these without asking Kira.
 
 ## Final verification
 - Tested snapshot: <commit, or HEAD + task-scoped tracked diff hash against HEAD + path/content hash of each task-owned untracked file>
-- Kira's key decisions: <each: kept (evidence ref) / changed with Kira's approval (ref)>
+- Key decisions: <each: kept (evidence ref) / changed with the requester's approval (ref)>
 - User benefit, if applicable: <before/after observations and evidence, or not measured>
 - Verified by: <Peer> | Correctness: <evidence ref> | Architecture: <evidence ref>
 
