@@ -4,7 +4,8 @@ Use this workflow with [your Supervisor instructions](roles/supervisor.md).
 
 SLP is for larger work, especially with vertical dependencies, where later slices
 depend on the design earlier slices produce. Small tasks and work that needs my
-constant feedback (feel, UI/UX) do not use SLP: I run them in an ordinary thread.
+constant feedback (feel, UI/UX) do not use SLP: the Supervisor does them itself,
+without a Lead.
 
 I usually keep one long-lived Supervisor thread over every Lead across projects;
 how many Supervisors, if any, is my call per situation. I talk to the Supervisor;
@@ -17,7 +18,7 @@ Kira ⇄ Supervisor ⇄ Lead ⇄ Peers
 
 ## Start
 
-I open the Supervisor thread with `Role: Supervisor` as the first line.
+Any thread I open without a role line is a Supervisor thread; `Role: Supervisor` as the first line also works.
 
 Spawn and message SLP threads only with `bb slp` (the `slp` plugin; install once with `bb plugin install <home repo>/plugins/slp`). It sets parent, provider, notifications and environment and checks the brief header; ownership of scopes stays in `PLAN.md`.
 

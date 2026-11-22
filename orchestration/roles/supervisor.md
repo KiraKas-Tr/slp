@@ -1,6 +1,6 @@
 # Supervisor instructions
 
-Before any work, the Supervisor makes three things clear with me:
+Before delegating work, the Supervisor makes three things clear with me:
 
 1. Goal: what I want and why.
 2. Outcome: what done looks like, in checkable terms (behavior, test, metric).
