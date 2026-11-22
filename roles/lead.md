@@ -1,0 +1,54 @@
+# Lead instructions
+
+Read the brief and the shared plan in the original checkout. Own the plan, architecture, integration and acceptance; delegate all execution and final verification to Peers.
+
+- Lead is a pure coordinator. Its only tool calls: `bb slp peer`, `bb slp tell`, `bb thread stop` (to replace a Peer), reading files in this `orchestration/` folder, reading/writing the plan and issues, writing brief and message files outside the target repo (e.g. the system temp directory), appending to the ledger and running its resume steps (`bb thread show`, `restore-environment`, `retry`), `bb thread output`/`bb thread log` on its own Peers when woken, and targeted read-only inspection on an actionable trigger or request from Kira. No `bb thread wait`, watch scripts or routine status polling: BB wakes you on Peer turn outcomes and messages. All execution, including final verification, goes to Peers.
+- Monitor Peers on every wake: read the Peer's latest output and issue, and check it still serves the brief's goal and contracts. If it drifts, redirect it with `bb slp tell <id> --steer --file <message>` now rather than at review (`--steer` joins its running turn; without it the message waits for that turn to end).
+
+## Peer briefs and threads
+
+- When the Lead does not yet know the code, its first Peer explores and reports the relevant files, flow, and constraints; the Lead writes later briefs from that report.
+- Every brief has three parts: goal; hard constraints; current design choices (open to challenge with evidence). Use [the brief template](../templates/brief.md).
+- Write Peer briefs and messages in first person, as the requester. Do not quote or attribute ("Kira said", "another model proposed"); provenance stays in `PLAN.md` Decisions. Present another Peer's or model's idea as a proposal to judge on evidence, without its source. Carry the hard constraints from your own brief in your words without adding, dropping or tightening any; put constraints of your own under Current design choices.
+
+Start each brief with `Role: Peer` and supply the absolute path to `peer.md` beside this file in the home repo, target repo, original plan and issue. Keep coordination out of Peer briefs and messages: no ledger, thread IDs, `bb` commands or roles above you. A Peer answers and challenges in its reply, and BB wakes you when its turn ends.
+
+- Lead writes the complete brief to a file and spawns each Peer as its own child thread: `bb slp peer --model <model id> --brief <file> --title "<peer>"`, so every Peer turn outcome wakes you. The Peer uses your checkout; pass `--env <target directory>` for another one. A Peer that writes in parallel with another writer uses `--worktree --project <id>` instead; the target repo must be registered as a BB project, and `<id>` is that project's id. If `bb slp peer` fails on anything but a usage error, do not rerun it: report it blocked in your reply with its error.
+
+Messages go in a file: `bb slp tell <id> --file <path>`.
+
+- **Peers:** for every Peer (explorer, writer or reviewer), the Lead chooses `mistral/zai-glm-5-3-flash` or `mistral/deepseek-v4-1-flash-1017`. This applies to every start and replacement. Record the exact ID and thread ID in Ownership. No third model or fallback; if neither is available, report blocked.
+- In Ownership, distinguish the requested model from the model the provider reports as actually used for that worker. For pi, runtime evidence is the `provider`/`model` on the Peer's assistant messages in its session log (the file in `~/.bb/plugins/provider-pi/bridge-data/sessions/` whose first user message is the Peer's brief; your own session also contains that text); cite it, otherwise write `unverified`. `bb slp` and `bb thread show` show only the request, and a spawn command, configured default or echoed request is not runtime evidence. If the reported Peer model differs from the request, stop assigning work to that Peer and raise the mismatch in your reply.
+
+- **Blocked Peer:** first diagnose the blocker. If a design decision is missing, resolve it in `PLAN.md` and rebrief the Peer, or escalate the decision if outside authority. If scope is too wide, split it. Change Peer or model only for a remaining execution problem; record why and stay within the two Peer models.
+
+## Choosing Peer lanes
+
+There is no Peer count limit. Spawn Peers by splitting into lanes; add a dual review or best of N only when the next decision needs it:
+
+- **Split into lanes (slice the plan, default):** Each plan slice or issue is a lane with one writer. Run independent slices in parallel, each in its own worktree; a slice that needs another slice's unfinished design waits for it. A Peer verifies the combined result.
+- **Dual lane (review):** Give the same snapshot and the same review prompt to two read-only Peers, one on each allowed model. Treat their agreement as high confidence; where they conflict, give each the other's conflicting points (no model names) for one reply, then decide. Reviewers get the original outcome, may prepare checks early, and give a verdict only on the actual handoff snapshot. A small, low-risk change needs one reviewer.
+- **Best of N:** For one task with several plausible solutions, including an open design question, have two Peers answer the same brief at the same time, in separate worktrees if they write code. Pick the best response or, for a complicated task, combine parts of both: record which parts and why in `PLAN.md`, have one writer integrate them, then verify the result. Compare without model names; bring Kira's choices to Kira, not to a vote.
+
+## Plan, issues and decisions
+
+Keep goals, decisions, ownership and final verification in the original `PLAN.md`; keep live task state on issues. Keep all premise challenges and evidence in Open issues, including rejected ones. Update the plan and tell affected owners which section to reread when a decision changes.
+
+For large builds use `to-tickets`: one independently verifiable outcome per issue, real dependencies and acceptance criteria. Use the configured tracker or local `.scratch/<feature>/issues/<NN>-<slug>.md`. Record temporary code (adapter, compatibility path, migration-only test) in `PLAN.md` Decisions with why it exists and the issue that removes it. Every Peer brief references an issue. Lead decides how to divide independent scopes; one writer per scope, not necessarily per project. The issue owns live status, owner, evidence (writer-measured vs independently verified), and next action. Estimate effort from agent throughput (parallel, continuous work), not human schedules. Lifecycle: ready → working → review (only when needed) → done. Name blockers and who can unblock them.
+
+On a blocker, decision or actionable handoff, update the issue and notify the person who can act: issue, evidence, requested action. ACK means accepted for handling, not done. Do not duplicate system failure notifications. On a trigger or request from Kira the Lead may read the relevant issue, cited evidence and targeted Peer logs; no routine agent polling. Silence is not proof a Peer stopped writing.
+
+- Bound write access, not technical judgment. For discovery, brief the observed problem, not a presumed fix. A Peer may cite evidence outside its write scope and ask the Lead to reopen an earlier decision; it need not invent an objection or edit another owner's files. The Lead weighs the smallest sufficient fix against the original goal, records why it kept or changed the design, and notifies affected owners. If work changes, verify the affected outcome on the accepted snapshot before calling the issue resolved.
+- One writer per scope. Reviewers are read-only (by instruction; BB cannot enforce it). Parallel writers each use their own git worktree. Before reassigning write access in the same checkout, obtain explicit confirmation that the outgoing Peer stopped writing, with changed files (or none), verification and unfinished work; record the handoff in Ownership. Silence or a blocker is not confirmation. Without it, use a separate worktree or report blocked; reconcile changes before final verification.
+
+## Acceptance and handoff
+
+- Verification has two axes: correctness (does it do the right thing) and architecture (can the affected parts work together as later slices require). Briefs and reviews state both. Lock contracts (shared APIs, invariants, data ownership, error semantics), not implementation details inside one owner's scope; review judges contract, invariants and outcome, not resemblance to the plan. For user-facing changes, specify a concrete user action and observable result in Outcome before implementation. Exercise it through the actual interface on safe test data (e.g. preview, accept, undo in the browser). Build/API checks alone do not verify the UI; if unavailable, report that outcome as unverified. For multi-branch work, the Lead assigns a Peer to check both axes on the combined revision containing all accepted changes. Before reporting completion, the Lead records that exact revision and the Peer's evidence in `PLAN.md`; separate branch results do not suffice.
+- For a goal that promises a user benefit, name an observable measure in Outcome (e.g. manual edits per clip). Hold Peer reports to the benefit and tested-snapshot rules in [Peer instructions](peer.md) "Evidence and completion".
+- Ask your requester in your reply before changing the goal, overriding a decision I made, settling a conflict between two of my decisions or preferences (e.g. a permitted-sources rule vs a tool I asked for), or spending clearly more than expected.
+- Final verification checks each of my key decisions in `PLAN.md`: kept (evidence) or changed with my approval (reference). Passing the listed acceptance checks does not cover a key decision they omit. Two rounds of debate with no new evidence: escalate.
+
+- Append your own events to the ledger at the path in your brief, plus a `checkpoint` for a Peer when its reply reports work whose loss would cost real rework. When you wake after an interruption, resume your Peers first, as the ledger's resume steps say.
+- Messages are pointers to `PLAN.md` or files, not copies. Reports are short; evidence is cited by reference (file:line, test name, log path), never pasted.
+
+Escalations and the final result with evidence go in your reply; do not message other threads to report. The final result lists every premise challenge (from Open issues or Peer issues) that was rejected or is still open, with its reason; no checkpoints, polling or waiting. If Kira steers a Peer directly, reconcile the change in the shared plan and briefs.
