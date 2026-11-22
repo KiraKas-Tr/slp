@@ -6,7 +6,12 @@ import { isAbsolute, resolve } from "node:path";
 import type { BbPluginApi, PluginCliContext } from "@get-bb/plugin-sdk";
 
 // orchestration/roles/lead.md "Peers": no third model, no fallback.
-const PEER_MODELS = ["mistral/zai-glm-5-3-flash", "mistral/deepseek-v4-1-flash-1017"];
+// Peer model flag -> provider and that provider's model id. Leads always run on pi.
+const PEER_MODELS: Record<string, { providerId: string; model: string }> = {
+  "mistral/zai-glm-5-3-flash": { providerId: "pi", model: "mistral/zai-glm-5-3-flash" },
+  "mistral/deepseek-v4-1-flash-1017": { providerId: "pi", model: "mistral/deepseek-v4-1-flash-1017" },
+  "devin/swe-2-flash-medium": { providerId: "devin", model: "swe-2-flash-medium" },
+};
 
 const USAGE = `Usage:
   bb slp lead --model <id> --brief <file> [--env <env-id|dir>]
@@ -14,7 +19,7 @@ const USAGE = `Usage:
   bb slp tell <thread-id> (--file <path> | <message...>) [--steer]
 
 The brief must start with "Role: Lead" + "Name: <name>", or "Role: Peer".
-Children run on provider pi as children of the calling thread and wake you
+Leads run on pi, Peers on their model's provider, as children of the calling thread; they wake you
 after every turn. Without --env the child uses your
 environment. tell queues behind an active turn; --steer joins it instead.
 Only a Lead spawns Peers; Leads and Peers do not spawn Leads.`;
@@ -138,9 +143,10 @@ export default async function plugin(bb: BbPluginApi) {
     if (role === "Lead" && (callerRole === "Lead" || callerRole === "Peer")) {
       throw new UsageError("Leads and Peers do not spawn Leads.");
     }
-    const model = required(flags, "model");
-    if (role === "Peer" && !PEER_MODELS.includes(model)) {
-      throw new UsageError(`Peer model must be one of: ${PEER_MODELS.join(", ")}. If neither works, report blocked.`);
+    const requested = required(flags, "model");
+    const target = role === "Lead" ? { providerId: "pi", model: requested } : PEER_MODELS[requested];
+    if (target === undefined) {
+      throw new UsageError(`Peer model must be one of: ${Object.keys(PEER_MODELS).join(", ")}. If none works, report blocked.`);
     }
     const brief = await readText(required(flags, "brief"), ctx);
     const name = checkBrief(brief, role);
@@ -150,8 +156,8 @@ export default async function plugin(bb: BbPluginApi) {
     const child = await bb.sdk.threads.spawn({
       projectId,
       environment,
-      providerId: "pi",
-      model,
+      providerId: target.providerId,
+      model: target.model,
       title,
       prompt: brief,
       parentThreadId,
@@ -159,7 +165,7 @@ export default async function plugin(bb: BbPluginApi) {
       senderThreadId: parentThreadId,
       pluginMetadata: { role, ...(name ? { name } : {}) },
     });
-    return `Spawned ${title}: ${child.id} (pi, requested ${model}).`;
+    return `Spawned ${title}: ${child.id} (${target.providerId}, requested ${target.model}).`;
   }
 
   async function tell(flags: Flags, ctx: PluginCliContext) {
