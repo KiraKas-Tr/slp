@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green-refactor", or wants integration tests.
+description: Test-driven development. Use when the user wants to build features or fix bugs test-first, mentions "red-green", or wants integration tests.
 ---
 
 # Test-Driven Development
@@ -19,9 +19,10 @@ See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking g
 
 A **seam** is the public boundary you test at: the interface where you observe behavior without reaching inside. Tests live at seams, never against internals.
 
-**Test only at pre-agreed seams.** Before writing any test, write down the seams under test. Take them from your brief's "Done when"; if it names none, choose them yourself and list them in your reply. Confirm with the user only when no brief exists. You can't test everything, so agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
+**Test only at pre-agreed seams.** Before writing any test, write down the seams under test, each with a one-line note on what it catches and what it misses. You can't test everything, so agreeing the seams up front is how testing effort lands on the critical paths and complex logic instead of every edge case.
 
-Ask: "What's the public interface, and which seams should we test?" Give each proposed seam a one-line note on what it catches and what it misses.
+- With a brief: take the seams from its "Done when"; if it names none, choose them yourself and list them in your reply. Do not stop to ask.
+- With no brief: ask the user "What's the public interface, and which seams should we test?" and wait for the answer.
 
 ## Anti-patterns
 
@@ -31,6 +32,6 @@ Ask: "What's the public interface, and which seams should we test?" Give each pr
 
 ## Rules of the loop
 
-- **Red before green.** Write the failing test first, then only enough code to pass it. Don't anticipate future tests or add speculative features.
+- **Red before green.** Write the failing test first, run it, and see it fail for the reason you expect: a test that passes, or fails for another reason, proves nothing yet. Then write only enough code to pass it. Don't anticipate future tests or add speculative features.
 - **One slice at a time.** One seam, one test, one minimal implementation per cycle.
 - **Refactoring is not part of the loop.** It belongs to the review stage, not the red → green implementation cycle.

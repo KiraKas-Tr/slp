@@ -1,0 +1,5 @@
+interface:
+  display_name: "Better-SLP"
+  short_description: "Observe SLP on real tasks; propose the smallest fix"
+policy:
+  allow_implicit_invocation: false

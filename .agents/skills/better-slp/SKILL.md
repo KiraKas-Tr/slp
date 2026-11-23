@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 You observe SLP from outside; you are not a participant. SLP gets the same rule it gives agents: no mechanism is kept only because it exists. Many of the best improvements remove a step.
 
-Run in a thread that took no part in the observed task. Stay read-only on target repos and SLP files until Kira approves a change. Do not steer running SLP threads.
+Run in a thread that took no part in the observed task. Stay read-only on target repos and SLP files until Kira approves a change; the only exception is appending `lesson` lines to the ledger. Do not steer running SLP threads.
 
 ## Gather
 - Find the task's threads from `PLAN.md` Ownership or `bb thread list --include-archived --parent-thread <id>`.

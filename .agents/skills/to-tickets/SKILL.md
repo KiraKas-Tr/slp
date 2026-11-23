@@ -37,13 +37,19 @@ Break the work into **tracer bullet** tickets.
 
 </vertical-slice-rules>
 
-Give each ticket its **blocking edges**: the other tickets that must complete before it can start. A ticket with no blockers can start immediately.
+Give each ticket its **blocking edges**: the other tickets that must complete before it can start. A ticket with no blockers can start immediately. Work then follows the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
 Every ticket and blocking edge must answer: what breaks if we skip this step and go straight to the end state? If the only answer is a tidier plan, merge it. Changes that are only correct together belong in one ticket.
 
 **Go straight to the end state when you can.** If every caller lives in this repo and one ticket can change them all and verify the result, do that: no old and new forms side by side.
 
-**Wide refactors are the exception to vertical slicing,** but use expand–contract only when a transitional state is genuinely required: running production data, independently deployed services or clients, or a change too large to land and verify in one ticket. A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. Any temporary code (adapter, compatibility path, migration-only test) is named in the expand ticket with why it exists and the contract ticket that removes it, so later agents do not mistake it for target architecture. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket; green is promised only there.
+**Wide refactors are the exception to vertical slicing,** but use expand–contract only when a transitional state is genuinely required: running production data, independently deployed services or clients, or a change too large to land and verify in one ticket. A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**:
+
+1. **Expand:** add the new form beside the old so nothing breaks.
+2. **Migrate:** move the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists.
+3. **Contract:** delete the old form once no caller remains, in a ticket blocked by every migrate batch.
+
+Any temporary code (adapter, compatibility path, migration-only test) is named in the expand ticket with why it exists and the contract ticket that removes it, so later agents do not mistake it for target architecture. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket; green is promised only there.
 
 ### 4. Quiz the user
 
@@ -55,7 +61,7 @@ Otherwise, present the proposed breakdown as a numbered list. For each ticket, s
 - **Blocked by**: which other tickets (if any) must complete first
 - **What it delivers**: the end-to-end behaviour this ticket makes work
 
-Ask the user:
+Ask the user, with your ask-the-user tool when you have one (`ask_user_question`, `AskUserQuestion` or the like), otherwise in text:
 
 - Does the granularity feel right? (too coarse / too fine)
 - Are the blocking edges correct: does each ticket only depend on tickets that genuinely gate it?
@@ -68,9 +74,7 @@ Iterate until the user approves the breakdown.
 Publish the approved tickets. **How** depends on the configured tracker; the tickets are the same either way, only the shape of the blocking edges changes:
 
 - **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
-- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. If the source was an existing issue, make each ticket its sub-issue (tracker doc's operation). Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
-
-Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
+- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. If the source was an existing issue, make each ticket its sub-issue. Apply the labels your brief or plan names.
 
 Do NOT close or modify any parent issue.
 
@@ -113,6 +117,10 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 ## Blocked by
 
 - A reference to each blocking ticket, or "None (can start immediately)". Omit this section when blockers were set as native edges.
+
+## Status
+
+ready | Owner: unassigned | Evidence: none yet | Next: claim when unblocked
 
 </issue-template>
 
