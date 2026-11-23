@@ -5,13 +5,16 @@ import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import type { BbPluginApi, PluginCliContext } from "@get-bb/plugin-sdk";
 
-// orchestration/roles/lead.md "Peers": no third model, no fallback.
-// Peer model flag -> provider and that provider's model id. Leads always run on pi.
-const PEER_MODELS: Record<string, { providerId: string; model: string }> = {
-  "mistral/zai-glm-5-3-flash": { providerId: "pi", model: "mistral/zai-glm-5-3-flash" },
-  "mistral/deepseek-v4-1-flash-1017": { providerId: "pi", model: "mistral/deepseek-v4-1-flash-1017" },
-  "devin/swe-2-flash-medium": { providerId: "devin", model: "swe-2-flash-medium" },
-};
+// Peer model flag -> provider and that provider's model id. Leads run on pi.
+// `devin/<id>` runs on provider devin; other model ids run on pi.
+function resolvePeerModel(requested: string): { providerId: string; model: string } {
+  if (requested.startsWith("devin/")) {
+    const model = requested.slice("devin/".length);
+    if (model.trim() === "") throw new UsageError(`Invalid Peer model id: ${requested}`);
+    return { providerId: "devin", model };
+  }
+  return { providerId: "pi", model: requested };
+}
 
 const HEARTBEAT_DEFAULT_HOURS = 8;
 const HEARTBEAT_KEY = "heartbeat:";
@@ -182,10 +185,7 @@ export default async function plugin(bb: BbPluginApi) {
       throw new UsageError("Leads and Peers do not spawn Leads.");
     }
     const requested = required(flags, "model");
-    const target = role === "Lead" ? { providerId: "pi", model: requested } : PEER_MODELS[requested];
-    if (target === undefined) {
-      throw new UsageError(`Peer model must be one of: ${Object.keys(PEER_MODELS).join(", ")}. If none works, report blocked.`);
-    }
+    const target = role === "Lead" ? { providerId: "pi", model: requested } : resolvePeerModel(requested);
     const brief = await readText(required(flags, "brief"), ctx);
     const name = checkBrief(brief, role);
     const title = role === "Lead" ? `Lead ${name}` : required(flags, "title");
@@ -252,20 +252,24 @@ export default async function plugin(bb: BbPluginApi) {
   // A tick only wakes an idle thread: a busy one is already awake, and queueing would stack ticks.
   bb.background.schedule("slp-heartbeat", "* * * * *", async () => {
     for (const key of await bb.storage.kv.list(HEARTBEAT_KEY)) {
-      const row = await bb.storage.kv.get<Heartbeat>(key);
-      const threadId = key.slice(HEARTBEAT_KEY.length);
-      const now = Date.now();
-      const thread = await bb.sdk.threads.get({ threadId }).catch(() => null);
-      if (!row || !thread || thread.archivedAt || thread.deletedAt || now >= row.until) {
-        await bb.storage.kv.delete(key);
-        continue;
+      try {
+        const row = await bb.storage.kv.get<Heartbeat>(key);
+        const threadId = key.slice(HEARTBEAT_KEY.length);
+        const now = Date.now();
+        const thread = await bb.sdk.threads.get({ threadId }).catch(() => null);
+        if (!row || !thread || thread.archivedAt || thread.deletedAt || now >= row.until) {
+          await bb.storage.kv.delete(key);
+          continue;
+        }
+        if (now < row.nextAt) continue;
+        await bb.storage.kv.set(key, { ...row, nextAt: now + row.everyMinutes * 60_000 });
+        if (thread.status !== "idle") continue;
+        const { role } = await bb.sdk.threads.getPluginMetadata({ threadId });
+        const text = HEARTBEAT_PROMPT[role === "Lead" ? "Lead" : "Supervisor"];
+        await bb.sdk.threads.send({ threadId, input: [{ type: "text", text, mentions: [] }], mode: "queue-if-active" });
+      } catch {
+        // One failing thread must not block other scheduled heartbeats in the same tick.
       }
-      if (now < row.nextAt) continue;
-      await bb.storage.kv.set(key, { ...row, nextAt: now + row.everyMinutes * 60_000 });
-      if (thread.status !== "idle") continue;
-      const { role } = await bb.sdk.threads.getPluginMetadata({ threadId });
-      const text = HEARTBEAT_PROMPT[role === "Lead" ? "Lead" : "Supervisor"];
-      await bb.sdk.threads.send({ threadId, input: [{ type: "text", text, mentions: [] }], mode: "queue-if-active" });
     }
   });
 

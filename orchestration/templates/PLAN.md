@@ -22,8 +22,8 @@ Nobody changes these without asking the requester.
 <Tracker link; issues own live state.>
 
 ## Ownership
-| Scope | Owner / thread ID | Requested model ID | Runtime model ID + evidence, or unverified | Worktree / branch | Issue / handoff |
-|---|---|---|---|---|---|
+| Scope | Owner / thread ID | Model ID | Worktree / branch | Issue / handoff |
+|---|---|---|---|---|
 
 ## Final verification
 - Tested snapshot: <commit, or HEAD + task-scoped tracked diff hash against HEAD + path/content hash of each task-owned untracked file>
