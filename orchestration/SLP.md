@@ -2,10 +2,12 @@
 
 Use this workflow with [your Supervisor instructions](roles/supervisor.md).
 
-SLP is for larger work, especially with vertical dependencies, where later slices
-depend on the design earlier slices produce. Small tasks and work that needs my
-constant feedback (feel, UI/UX) do not use SLP: the Supervisor does them itself,
-without a Lead.
+SLP is for larger work: work with vertical dependencies, where later slices
+depend on the design earlier slices produce, and large work that splits into
+independent pieces Peers can do in parallel (e.g. translating dozens of batches).
+Small tasks and work that needs my constant feedback (feel, UI/UX) do not use
+SLP: the Supervisor does them itself, without a Lead. When a task is not clearly
+small, say whether you will use SLP and why before starting.
 
 I usually keep one long-lived Supervisor thread over every Lead across projects;
 how many Supervisors, if any, is my call per situation. I talk to the Supervisor;
