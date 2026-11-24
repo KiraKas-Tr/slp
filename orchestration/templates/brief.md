@@ -27,3 +27,4 @@ Lead brief (this line only): you own `PLAN.md` in the target repo; see it for go
 ## Done when
 - Correctness: <how it is checked: test, command, observable behavior, metric>
 - Architecture: <what later slices need to be able to do; how to check that across the affected parts. Require a particular design only if it is a hard constraint above.>
+- Peer brief only: Output: <the one result to return, e.g. a commit, or a table plus a one-line verdict>. Budget: <time or runs>; when it runs out, stop, keep what works and report what is done and what is left.

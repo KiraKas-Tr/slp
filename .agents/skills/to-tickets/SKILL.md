@@ -10,7 +10,7 @@ Break a plan, spec, or conversation into a set of **tickets**: tracer-bullet ver
 
 Use the tracker named in your brief or plan; if none is configured, use the local file tracker.
 
-In SLP the Lead runs this skill: it does not explore code itself (step 2 goes to a Peer) and it decides the breakdown itself (step 4).
+In SLP the Lead runs this skill: it does not explore code itself (step 2 goes to a Peer) and it decides the breakdown itself (step 4). Each ticket is a feature the Lead accepts; the Lead breaks it into Peer tasks when it runs it (see `orchestration/roles/lead.md`, Choosing Peer lanes).
 
 ## Process
 
