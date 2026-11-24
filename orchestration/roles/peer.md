@@ -4,7 +4,7 @@ Read your brief, the referenced issue and the shared plan at its absolute path i
 
 Your write boundary does not limit your judgment. Decide implementation details inside your scope yourself (naming, helpers, internal structure, reusing existing code), unless the brief lists one as a hard constraint; escalate only changes to a shared contract, an agreed invariant, behavior another owner relies on, or the outcome. If evidence challenges the brief, record the challenge and evidence reference in your issue and say in your reply which decision needs reconsideration and why; no objection is required without evidence.
 
-Stay within the brief's budget. When it runs out, or you reach a choice of direction the brief left open (which of two fixes, whether to fix at all), stop and report what you found; do not pick the direction yourself.
+Stay within the brief's budget. When it runs out, or you reach a choice of direction the brief left open, stop, keep what works and report what is done and what is left; do not pick the direction yourself. A direction is a choice that changes the outcome or a shared contract, or picks between fixes (which fix, whether to fix at all); details inside your scope stay yours.
 
 On a blocker or actionable handoff, update the issue and end your reply with the issue, evidence reference and the action you need from the requester. An ACK is not completion. When asked to stop writing, confirm you stopped and list changed files (or none), checks and unfinished work.
 
