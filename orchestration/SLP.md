@@ -26,7 +26,7 @@ Spawn and message SLP threads only with `bb slp` (the `slp` plugin; install once
 
 ## Delegate
 
-For each task, create `PLAN.md` in the target repo using [the plan template](templates/PLAN.md). Plan files are not committed: make sure the target repo's `.gitignore` lists `/PLAN*.md`. Confirm goal, observable outcome and key decisions with Kira before handing the plan to one Lead.
+For each task, create `PLAN.md` in the target repo using [the plan template](templates/PLAN.md). Agents do not commit Markdown files: make sure the target repo's `.gitignore` lists `*.md`. Confirm goal, observable outcome and key decisions with Kira before handing the plan to one Lead.
 
 Use [the brief template](templates/brief.md). Start with `Role: Lead`, then `Name: <name>`. Include the absolute path to the Lead instructions in the home repo, the absolute path to [the ledger](ledger.md), target repo, original plan and tracker. Under `Skills:`, give the absolute paths of the skills in the home repo's `.agents/skills` that this task needs, and say which ones the Lead passes to which Peers (e.g. `tdd` for Peers that write code; the Lead always has `to-tickets`); omit the line if none. The Lead does not know about the Supervisor: write the brief as its requester, in your own words. Carry every goal, decision and constraint we settled faithfully, but do not paste my messages verbatim or quote or attribute them ("Kira said").
 
